@@ -1,4 +1,99 @@
+# MECHA LAB 2.0 | SINGLE FILE | 6 JOINT 3D | 2026-11-23
+# Simulation only: no communication with real ROBOTIS hardware.
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="MECHA LAB 2.0", page_icon="🦾", layout="wide", initial_sidebar_state="collapsed")
+
+STYLE = '''<style>
+[data-testid="stSidebar"], [data-testid="stSidebarNav"], [data-testid="stHeader"] {display:none!important;}
+[data-testid="stAppViewContainer"] {background: radial-gradient(ellipse at 75% 20%, #142e51 0%, #080e1f 55%, #060b16 100%);}
+.block-container {max-width: 1400px !important; padding: 1.5rem 2.2rem 1rem !important;}
+html, body {background:#080e1f;}
+h1,h2,h3,p,label,div {font-family: 'Malgun Gothic',sans-serif;}
+.stButton>button {background:#152941!important;color:#e8f6ff!important;border:1px solid #567b9a!important;border-radius:8px!important;min-height:52px;width:100%;font-weight:700!important;}
+.stButton>button:hover {border-color:#ffd08a!important;color:#ffd08a!important;background:#1e3854!important;}
+[data-testid="stMarkdownContainer"] p {color:#c8daeb;}
+iframe {display:block;border:1px solid #3b6683;border-radius:14px;background:#091523;}
+</style>'''
+st.markdown(STYLE, unsafe_allow_html=True)
+
+if "mecha_screen" not in st.session_state:
+    st.session_state.mecha_screen = "intro"
+if "mecha_mission" not in st.session_state:
+    st.session_state.mecha_mission = "rock"
+
+MISSION_INFO = {
+    "rock": ("01", "화성 암석 채취", "90초 · 목표 관절 자세 달성"),
+    "battery": ("02", "배터리 분리", "120초 · 목표 관절 자세 달성"),
+    "satellite": ("03", "인공위성 수리", "240초 · 3단계 관절 자세 달성"),
+}
+
+GAME_HTML = r'''<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#090f20;--panel:#101c34;--line:#46617e;--cyan:#89e5ed;--orange:#fbb16b;--white:#edf5fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Consolas,'Malgun Gothic',sans-serif;overflow:hidden}
+button,input{font:inherit}button{border:1px solid #8ba3ba;background:#1e304c;color:#e9f7ff;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:700}
+button:hover{border-color:#ffd598;color:#ffd598}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan)}button.primary{background:#eaa269;color:#111c30;border-color:#ffdfab}
+.screen{height:100vh;min-height:600px;display:none;position:relative;overflow:hidden}.screen.active{display:flex}
+#intro{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 66% 42%,#253b76 0,#0a142b 42%,#080c16 80%)}
+.stars{position:absolute;inset:0;background-image:radial-gradient(2px 2px at 12% 20%,white 90%,transparent),radial-gradient(2px 2px at 76% 23%,#b2eaff 90%,transparent),radial-gradient(2px 2px at 40% 64%,white 90%,transparent),radial-gradient(1px 1px at 22% 81%,white 90%,transparent),radial-gradient(1px 1px at 83% 76%,white 90%,transparent);background-size:410px 360px;opacity:.65;pointer-events:none}
+.orb{position:absolute;width:38vmin;height:38vmin;right:7%;top:12%;border-radius:50%;background:radial-gradient(circle at 31% 27%,#80b7d7,#4158a4 48%,#1d2459 75%);box-shadow:0 0 70px #3866a966;opacity:.65;pointer-events:none}
+.intro-content{position:relative;z-index:2;padding:20px}.eyebrow{font-size:12px;letter-spacing:5px;color:var(--cyan);font-weight:700}
+h1{font-size:clamp(58px,10vw,135px);margin:15px 0 0;line-height:1;letter-spacing:7px;text-shadow:0 6px #192d48,0 0 28px #7bd5e966}
+.subtitle{color:#b1c8dd;letter-spacing:3px;font-size:clamp(12px,2vw,20px);margin:12px 0 30px}.intro-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.scan{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0px,transparent 5px,#00000018 6px);z-index:1}
+#select{flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 10%,#192f57,#0a1021 70%)}
+#select h2{font-size:34px;letter-spacing:4px}.choices{display:grid;grid-template-columns:repeat(3,minmax(0,250px));gap:18px;width:min(860px,93vw);margin:25px 0}
+.choice{background:#16263e;border:1px solid #557a92;text-align:left;border-radius:12px;min-height:200px;padding:23px;cursor:pointer;transition:transform .15s}
+.choice:hover{transform:translateY(-5px);border-color:var(--orange)}.choice .num{color:var(--orange);letter-spacing:3px}.choice h3{font-size:22px}.choice p{color:#c1d4df;font-size:13px;line-height:1.6}
+#game{flex-direction:column;background:#091322}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 22px;background:#12243a;border-bottom:1px solid #426079}
+.brand{color:var(--cyan);font-size:12px;letter-spacing:2px}.topbar h2{font-size:19px;margin:3px 0 0}.clock{font-size:30px;color:#ffca88;font-weight:800;font-variant-numeric:tabular-nums}.clock.red{color:#ff7474}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 325px;min-height:0;flex:1}.viewport{position:relative;min-height:0;overflow:hidden}
+#scene{width:100%;height:100%;display:block;touch-action:none;cursor:grab}#scene.dragging{cursor:grabbing}
+.hud{position:absolute;left:20px;top:15px;font-size:12px;color:#b2c8d4;line-height:1.8;pointer-events:none}.hud strong{color:var(--cyan)}
+.panel{background:#101e32;border-left:1px solid #3d6078;overflow-y:auto;padding:16px}.panel h3{margin:2px 0 12px;font-size:15px;color:var(--orange);letter-spacing:1px}
+.joint{background:#162940;border:1px solid #314c68;border-radius:7px;margin:7px 0;padding:8px 10px}.joint label{display:flex;justify-content:space-between;font-size:12px;color:#dbe8ed;margin-bottom:5px}
+.joint input{width:100%;accent-color:#f1af74}.joint output{font-variant-numeric:tabular-nums;color:#a0eced}.tips{font-size:12px;line-height:1.6;color:#afc5d6}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.actions button{padding:9px 4px;font-size:12px}
+.missionText{font-size:13px;color:#d8e4ed;line-height:1.6;padding:10px;background:#1c3149;border-radius:6px}
+.foot{border-top:1px solid #385773;background:#14243a;display:flex;gap:10px;align-items:center;padding:9px 16px;flex-wrap:wrap}.foot span{flex:1;font-size:12px;color:#c8d6dc}
+.modal{display:none;position:absolute;inset:0;background:#06101bce;align-items:center;justify-content:center;z-index:10;padding:20px}.modal.visible{display:flex}
+.modal-inner{border:1px solid #9ac3d6;background:#172c43;box-shadow:0 20px 50px #0008;border-radius:14px;padding:24px;max-width:540px;text-align:center;line-height:1.7}.modal-inner h2{margin:0 0 10px;font-size:30px;color:var(--orange)}
+@media(max-width:760px){.workspace{grid-template-columns:1fr;grid-template-rows:minmax(310px,1fr) 280px}.panel{border-left:0;border-top:1px solid #426079}.choices{grid-template-columns:1fr;gap:8px}.choice{min-height:100px}.choice p{display:none}.choice h3{margin:8px 0}.screen{min-height:580px}.topbar{padding:8px}.foot{padding:6px}.clock{font-size:22px}}
+</style></head>
+<body>
+<section id="intro" class="screen"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB</h1><div class="subtitle">VIRTUAL ROBOT ARM CONTROL SYSTEM</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div><p class="tips">6-MOTOR SIMULATION · BIOLOID PREMIUM</p></div></section>
+<section id="select" class="screen"><div class="stars"></div><div style="z-index:2;text-align:center"><div class="eyebrow">MISSION SELECT</div><h2>SELECT OPERATION</h2><div class="choices"><div class="choice" data-mission="rock"><div class="num">01 / 01:30</div><h3>화성 암석 채취</h3><p>6개 관절을 조작해 암석 샘플 지점으로 말단을 이동시켜 보세요.</p></div><div class="choice" data-mission="battery"><div class="num">02 / 02:00</div><h3>배터리 분리</h3><p>목표 자세로 이동해 궤도 장치의 배터리를 분리하세요.</p></div><div class="choice" data-mission="satellite"><div class="num">03 / 04:00</div><h3>인공위성 수리</h3><p>여러 단계의 목표 자세를 달성해 정비 작업을 완료하세요.</p></div></div><button id="backIntro">← BACK</button></div></section>
+<section id="game" class="screen active"><div class="topbar"><div><div class="brand">MECHA LAB / 3D MISSION CONTROL</div><h2 id="missionTitle">화성 암석 채취</h2></div><div><div class="brand">TIME REMAINING</div><div class="clock" id="clock">01:30</div></div></div>
+<div class="workspace"><div class="viewport"><canvas id="scene" aria-label="6관절 3D 로봇팔"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br>드래그: 시점 회전 · 휠: 확대/축소<br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
+<div class="modal" id="resultModal"><div class="modal-inner"><div class="eyebrow">MISSION REPORT</div><h2 id="resultTitle">SUCCESS</h2><p id="resultText"></p><button id="retryBtn" class="primary">다시 도전</button><button id="selectBtn">미션 선택</button></div></div></section>
+<div class="modal" id="helpModal"><div class="modal-inner"><h2>HOW TO PLAY</h2><p>미션을 선택한 뒤 J1~J6의 슬라이더로 3D 로봇팔을 움직여 주세요. 화면을 드래그하면 로봇팔을 다른 방향에서 관찰할 수 있습니다. 미션별 목표 관절각에 접근해 판정 버튼을 누르면 됩니다.</p><p class="tips">R = 재시작 / Esc = 미션 선택 / Space = 집게 개폐<br>실물 로봇팔과의 USB 제어는 아직 연결하지 않은 시뮬레이션 버전입니다.</p><button id="closeHelp">확인</button></div></div>
+<script>
+'use strict';
+const el = id => document.getElementById(id);
+const canvas = el('scene');
+const ctx = canvas.getContext('2d');
+const missionConfig = {
+  rock:{title:'화성 암석 채취',time:90,goals:[[10,-35,55,5,0,0]],text:'암석 수집 자세에 접근하세요. 목표 관절각과의 오차가 각 관절 ±12° 이내면 성공합니다.'},
+  battery:{title:'배터리 분리',time:120,goals:[[0,-15,40,20,0,0]],text:'배터리 분리 자세에 접근하세요. 모든 관절을 목표각 ±12° 이내로 맞춰주세요.'},
+  satellite:{title:'인공위성 수리',time:240,goals:[[15,-25,50,10,25,0],[-15,-10,30,0,-20,35],[0,-35,55,5,0,-20]],text:'위성 정비 3단계입니다. 목표 자세를 차례로 달성하세요.'}
 };
+const neutral=[0,-20,35,0,0,0];
+const mins=[-145,-95,-120,-110,-145,-145];
+const maxs=[145,95,120,110,145,145];
+let angles=[...neutral], grip=false, currentMission=null, stage=0, duration=90, startTime=0, finished=false, frameId=0;
+let cameraAz=.75,cameraEl=.36,cameraZoom=.72,mouseDown=false,lastX=0,lastY=0;
+const RAD=Math.PI/180;
+const controls=[];
+for(let i=0;i<6;i++){
+ const div=document.createElement('div');div.className='joint';
+ const label=document.createElement('label');const name=document.createElement('span');name.textContent='J'+(i+1)+' / ID '+String(i+1).padStart(3,'0');
+ const out=document.createElement('output');out.textContent=angles[i]+'°';label.append(name,out);
+ const input=document.createElement('input');input.type='range';input.min=mins[i];input.max=maxs[i];input.step='1';input.value=angles[i];input.setAttribute('aria-label','관절 '+(i+1)+' 각도');
+ input.addEventListener('input',()=>{angles[i]=Number(input.value);out.textContent=angles[i]+'°';});
+ div.append(label,input);el('jointControls').append(div);controls.push({input,out});};
 const neutral=[0,-20,35,0,0,0];
 const mins=[-145,-95,-120,-110,-145,-145];
 const maxs=[145,95,120,110,145,145];
