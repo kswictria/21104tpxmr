@@ -1,20 +1,16 @@
-# MECHA LAB 2.0 | STANDALONE STREAMLIT | 2026-11-23
-# Single-file simulation. No motor commands are sent.
+# MECHA LAB 2.0 | SINGLE-FILE STREAMLIT | CONTROL DEMO
 import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="MECHA LAB 2.0", page_icon="🦾", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""<style>
-header[data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stSidebarNav"] {display:none !important;}
-.block-container {max-width:100% !important; padding:0 !important;}
-.stApp {background:#080d19;}
-[data-testid="stAppViewContainer"] {padding:0 !important;}
-iframe {display:block;}
+header[data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stSidebarNav"] {display:none!important}
+.block-container {max-width:100%!important;padding:0!important}
+.stApp {background:#080d19}
+iframe {display:block}
 </style>""", unsafe_allow_html=True)
 
-GAME_HTML = r"""<!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
+GAME_HTML = r"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
 :root{--bg:#090f20;--panel:#101c34;--line:#46617e;--cyan:#89e5ed;--orange:#fbb16b;--white:#edf5fa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Consolas,'Malgun Gothic',sans-serif;overflow:hidden}
 button,input{font:inherit}button{border:1px solid #8ba3ba;background:#1e304c;color:#e9f7ff;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:700}
@@ -52,120 +48,151 @@ h1{font-size:clamp(58px,10vw,135px);margin:15px 0 0;line-height:1;letter-spacing
 .modal{display:none;position:absolute;inset:0;background:#06101bce;align-items:center;justify-content:center;z-index:10;padding:20px}.modal.visible{display:flex}
 .modal-inner{border:1px solid #9ac3d6;background:#172c43;box-shadow:0 20px 50px #0008;border-radius:14px;padding:24px;max-width:540px;text-align:center;line-height:1.7}.modal-inner h2{margin:0 0 10px;font-size:30px;color:var(--orange)}
 @media(max-width:760px){.workspace{grid-template-columns:1fr;grid-template-rows:minmax(310px,1fr) 280px}.panel{border-left:0;border-top:1px solid #426079}.choices{grid-template-columns:1fr;gap:8px}.choice{min-height:100px}.choice p{display:none}.choice h3{margin:8px 0}.screen{min-height:580px}.topbar{padding:8px}.foot{padding:6px}.clock{font-size:22px}}
-</style></head>
-<body>
-<section id="intro" class="screen active"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB</h1><div class="subtitle">VIRTUAL ROBOT ARM CONTROL SYSTEM</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div><p class="tips">6-MOTOR SIMULATION · BIOLOID PREMIUM EXPERIMENT</p></div></section>
-<section id="select" class="screen"><div class="stars"></div><div style="z-index:2;text-align:center"><div class="eyebrow">MISSION SELECT</div><h2>SELECT OPERATION</h2><div class="choices"><div class="choice" data-mission="rock"><div class="num">01 / 01:30</div><h3>화성 암석 채취</h3><p>6개 관절을 조작해 암석 샘플 지점으로 말단을 이동시켜 보세요.</p></div><div class="choice" data-mission="battery"><div class="num">02 / 02:00</div><h3>배터리 분리</h3><p>목표 자세로 이동해 궤도 장치의 배터리를 분리하세요.</p></div><div class="choice" data-mission="satellite"><div class="num">03 / 04:00</div><h3>인공위성 수리</h3><p>여러 단계의 목표 자세를 달성해 정비 작업을 완료하세요.</p></div></div><button id="backIntro">← BACK</button></div></section>
-<section id="game" class="screen"><div class="topbar"><div><div class="brand">MECHA LAB / 3D MISSION CONTROL</div><h2 id="missionTitle">화성 암석 채취</h2></div><div><div class="brand">TIME REMAINING</div><div class="clock" id="clock">01:30</div></div></div>
-<div class="workspace"><div class="viewport" id="viewPort"><canvas id="scene"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br><span id="cameraHelp">자유 시점: 드래그로 회전 · 휠로 확대/축소</span><br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div><div class="camera-controls" id="cameraControls" aria-label="카메라 시점 선택"><span class="camera-title">CAMERA</span><button type="button" data-view="free" class="selected">0 자유 시점</button><button type="button" data-view="top">1 위·사선</button><button type="button" data-view="left">2 왼쪽·사선</button><button type="button" data-view="right">3 오른쪽·사선</button><button type="button" data-view="bottom">4 아래·사선</button><span class="view-status" id="viewStatus">드래그 회전 가능</span></div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
-<div class="modal" id="resultModal"><div class="modal-inner"><div class="eyebrow">MISSION REPORT</div><h2 id="resultTitle">SUCCESS</h2><p id="resultText"></p><button id="retryBtn" class="primary">다시 도전</button><button id="selectBtn">미션 선택</button></div></div></section>
-<div class="modal" id="helpModal"><div class="modal-inner"><h2>HOW TO PLAY</h2><p>미션을 선택한 뒤 J1~J6의 슬라이더로 3D 로봇팔을 움직여 주세요. 자유 시점에서는 화면 드래그로 회전하고 휠로 확대/축소할 수 있습니다. 0=자유, 1=위, 2=왼쪽, 3=오른쪽, 4=아래 시점이며, 방향이 고정됩니다. 다시 자유 시점 버튼을 누르면 직접 회전할 수 있습니다. 미션별 목표 관절각에 접근해 판정 버튼을 누르면 됩니다.</p><p class="tips">R = 재시작 / Esc = 미션 선택 / Space = 집게 개폐<br>실물 로봇팔과의 USB 제어는 아직 연결하지 않은 시뮬레이션 버전입니다.</p><button id="closeHelp">확인</button></div></div>
-<script>
-'use strict';
+
+#intro h1 .ver{font-size:.35em;vertical-align:top;color:#ffbd7e;letter-spacing:1px;margin-left:8px;text-shadow:none}
+#intro .subtitle{font-size:clamp(12px,1.5vw,18px)}
+#game .topbar{min-height:70px}
+#game .workspace{grid-template-columns:minmax(0,1fr) 320px}
+#game .panel{padding:15px}
+#game .hud{background:#09182bc9;border:1px solid #2b5272;border-radius:7px;padding:8px 11px;top:12px;left:12px}
+#game .camera-controls{max-width:calc(100% - 20px)}
+.controls-hint{color:#c4d8e6;font-size:12px;margin:7px 0 11px;line-height:1.5}
+.tool-btn{width:100%;margin:6px 0;padding:13px 8px}
+#rockStart.active{background:#376e57;border-color:#a2ebbc;color:#fff}
+.motor-status{margin:12px 0;padding:10px;background:#152d40;border:1px solid #466681;border-radius:8px;font-size:12px;line-height:1.5;color:#b4c7d9}
+.motor-status strong{color:#f8c283}
+#scene{cursor:grab}
+.angle-badge{display:inline-block}
+#clock{display:none}
+@media(max-width:760px){#game .workspace{grid-template-columns:1fr;grid-template-rows:minmax(340px,1fr) 280px}}
+</style></head><body>
+<section id="intro" class="screen active"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB<span class="ver">2.0</span></h1><div class="subtitle">REAL-WORLD ROBOT ARM CONTROL PROJECT</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div></div></section>
+<section id="game" class="screen"><div class="topbar"><div><div class="brand">MECHA LAB 2.0 / 6 AXIS CONTROL</div><h2>다관절 로봇팔 조작</h2></div><div><div class="brand" id="missionState">FREE CONTROL</div><div class="clock" id="clock">01:30</div></div></div>
+<div class="workspace"><div class="viewport" id="viewPort"><canvas id="scene"></canvas><div class="hud"><strong>JOINT 01—06</strong><br><span id="cameraHelp">0 자유 시점 · 1~4 고정 시점</span><br><span id="dragHelp">관절의 주황색 원을 끌어 회전</span></div><div class="camera-controls" id="cameraControls" aria-label="카메라 시점 선택"><span class="camera-title">CAMERA</span><button type="button" data-view="free" class="selected">0 자유</button><button type="button" data-view="top">1 위·사선</button><button type="button" data-view="left">2 왼쪽·사선</button><button type="button" data-view="right">3 오른쪽·사선</button><button type="button" data-view="bottom">4 아래·사선</button></div></div>
+<div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><p class="controls-hint">화면에서 관절을 직접 드래그하거나 슬라이더로 조작</p><div id="jointControls"></div><button id="rockStart" class="primary tool-btn">화성 암석 채취 미션 시작!</button><div class="actions"><button id="gripBtn">집게 닫기 (Space)</button><button id="resetBtn">↻ 초기 자세 (R)</button></div><div class="motor-status" id="motorStatus"><strong>실물 모터: 미연결</strong><div>COM6에서 CM-530 인식은 확인됨. 실시간 명령 전송은 별도 통신 브리지 검증 후 활성화.</div></div></div></div>
+<div class="foot"><button id="homeBtn">← MAIN MENU (Esc)</button><span id="status">J1~J6을 드래그하여 관절을 움직이세요.</span></div>
+</section>
+<div class="modal" id="helpModal"><div class="modal-inner"><h2>HOW TO PLAY</h2><p><b>관절 조작:</b> 로봇팔의 주황색 관절 표시를 드래그하면 해당 관절이 회전합니다. 오른쪽 J1~J6 슬라이더에서도 각도를 조절할 수 있습니다. 모델 위의 J1~J6 배지에 실시간 각도가 표시됩니다.</p><p><b>카메라:</b> 관절이 아닌 빈 공간을 드래그하면 자유 시점이 회전합니다. 마우스 휠은 확대/축소입니다. <b>0</b> = 자유, <b>1</b> = 위 사선, <b>2</b> = 왼쪽 사선, <b>3</b> = 오른쪽 사선, <b>4</b> = 아래 사선. 고정 시점에서는 카메라 방향이 유지됩니다.</p><p><b>미션:</b> 화성 암석 채취 버튼을 누르면 3D 암석이 나타납니다. 집게를 가까이 이동하고 Space 또는 집게 버튼을 눌러 집을 수 있습니다.</p><p class="tips">R: 로봇팔 초기 자세 · Esc: 시작 화면 · Space: 집게 개폐<br>현재는 가상 모델만 조작합니다. 실물 모터 명령은 전송되지 않습니다.</p><button id="closeHelp" class="primary">확인</button></div></div>
+<script>"use strict";
 const el = id => document.getElementById(id);
-const canvas = el('scene');
-const ctx = canvas.getContext('2d');
-const missionConfig = {
-  rock:{title:'화성 암석 채취',time:90,goals:[[10,-35,55,5,0,0]],text:'암석 수집 자세에 접근하세요. 목표 관절각과의 오차가 각 관절 ±12° 이내면 성공합니다.'},
-  battery:{title:'배터리 분리',time:120,goals:[[0,-15,40,20,0,0]],text:'배터리 분리 자세에 접근하세요. 모든 관절을 목표각 ±12° 이내로 맞춰주세요.'},
-  satellite:{title:'인공위성 수리',time:240,goals:[[15,-25,50,10,25,0],[-15,-10,30,0,-20,35],[0,-35,55,5,0,-20]],text:'위성 정비 3단계입니다. 목표 자세를 차례로 달성하세요.'}
-};
-const neutral=[0,-20,35,0,0,0];
-const mins=[-145,-95,-120,-110,-145,-145];
-const maxs=[145,95,120,110,145,145];
-let angles=[...neutral], grip=false, currentMission=null, stage=0, duration=90, startTime=0, finished=false, frameId=0;
-let cameraAz=.75,cameraEl=.36,cameraZoom=.82,mouseDown=false,lastX=0,lastY=0;
-// 'free' rotates with drag; the four numbered views lock camera direction.
-let cameraMode='free';
-// Diagonal viewpoints preserve depth cues and keep joint motion readable.
-// No view is directly overhead, directly underneath, or perfectly side-on.
-const cameraViews={
-  top:{az:.75,el:.72},
-  left:{az:-.35,el:.28},
-  right:{az:1.35,el:.28},
-  bottom:{az:.75,el:-.38}
-};
-const cameraLabels={free:'자유 시점',top:'위쪽 사선',left:'왼쪽 사선',right:'오른쪽 사선',bottom:'아래쪽 사선'};
-function setCameraMode(mode){
-  if(mode!=='free' && !cameraViews[mode])return;
-  cameraMode=mode;
-  mouseDown=false;
-  canvas.classList.remove('dragging');
-  el('viewPort').classList.toggle('fixed-view',mode!=='free');
-  if(mode!=='free'){
-    cameraAz=cameraViews[mode].az;
-    cameraEl=cameraViews[mode].el;
-  }
-  document.querySelectorAll('[data-view]').forEach(b=>{
-    let active=b.dataset.view===mode;
-    b.classList.toggle('selected',active);
-    b.setAttribute('aria-pressed',String(active));
-  });
-  el('viewStatus').textContent=mode==='free'?'드래그 회전 가능':cameraLabels[mode]+' 방향 고정';
-  el('cameraHelp').textContent=mode==='free'
-     ?'자유 시점: 드래그로 회전 · 휠로 확대/축소'
-     :'고정 시점: '+cameraLabels[mode]+' · 드래그 회전 잠금 · 휠 확대/축소';
-}
-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setCameraMode(b.dataset.view)));
-const RAD=Math.PI/180;
+const canvas=el('scene'),ctx=canvas.getContext('2d'),RAD=Math.PI/180;
+const neutral=[0,-20,35,0,0,0],mins=[-145,-95,-120,-110,-145,-145],maxs=[145,95,120,110,145,145];
+let angles=[...neutral],grip=false,rockMode=false,rockHeld=false,rockCollected=false;
+let cameraAz=.75,cameraEl=.36,cameraZoom=.84,cameraMode='free',cameraDrag=false,jointDrag=-1,lastX=0,lastY=0;
+let rockPos=[1.3,.30,-1.0],rockStartTime=0;
+let lastModel=null;
+const cameraViews={top:{az:.75,el:.72},left:{az:-.35,el:.28},right:{az:1.35,el:.28},bottom:{az:.75,el:-.38}};
+const cameraLabels={free:'자유 시점',top:'위 사선',left:'왼쪽 사선',right:'오른쪽 사선',bottom:'아래 사선'};
+function setCameraMode(mode){if(mode!=='free'&&!cameraViews[mode])return;
+ cameraMode=mode;cameraDrag=false;jointDrag=-1;
+ if(mode!=='free'){cameraAz=cameraViews[mode].az;cameraEl=cameraViews[mode].el;}
+ document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===mode);b.setAttribute('aria-pressed',String(b.dataset.view===mode));});
+ el('cameraHelp').textContent=mode==='free'?'0 자유 · 빈 공간 드래그: 카메라 회전':'고정: '+cameraLabels[mode]+' · 관절 드래그 가능';}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setCameraMode(b.dataset.view));
 const controls=[];
 for(let i=0;i<6;i++){
  const div=document.createElement('div');div.className='joint';
  const label=document.createElement('label');const name=document.createElement('span');name.textContent='J'+(i+1)+' / ID '+String(i+1).padStart(3,'0');
  const out=document.createElement('output');out.textContent=angles[i]+'°';label.append(name,out);
- const input=document.createElement('input');input.type='range';input.min=mins[i];input.max=maxs[i];input.step='1';input.value=angles[i];input.setAttribute('aria-label','관절 '+(i+1)+' 각도');
- input.addEventListener('input',()=>{angles[i]=Number(input.value);out.textContent=angles[i]+'°';});
+ const input=document.createElement('input');input.type='range';input.min=mins[i];input.max=maxs[i];input.step='1';input.value=angles[i];input.setAttribute('aria-label','관절 J'+(i+1));
+ input.oninput=()=>{angles[i]=Number(input.value);out.textContent=angles[i]+'°';};
  div.append(label,input);el('jointControls').append(div);controls.push({input,out});
 }
-function sync(){controls.forEach((c,i)=>{c.input.value=angles[i];c.out.textContent=angles[i]+'°';});}
-function show(id){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));el(id).classList.add('active');}
-function closeResult(){el('resultModal').classList.remove('visible');}
-function startMission(id){currentMission=id;stage=0;duration=missionConfig[id].time;show('game');setCameraMode('free');resetGame();}
-function resetGame(){if(!currentMission)return;angles=[...neutral];sync();grip=false;finished=false;stage=0;startTime=performance.now();closeResult();el('missionTitle').textContent=missionConfig[currentMission].title;el('gripBtn').textContent='집게 닫기 (Space)';updateObjective();el('status').textContent='목표 자세로 관절을 조절하세요.';}
-function updateObjective(){let cfg=missionConfig[currentMission];let g=cfg.goals[stage];el('objective').textContent=(cfg.goals.length>1?('STEP '+(stage+1)+'/'+cfg.goals.length+' · '):'')+cfg.text+'\n 목표각: '+g.map((v,i)=>'J'+(i+1)+':'+v+'°').join('  ');}
-function endMission(ok){if(finished)return;finished=true;el('resultTitle').textContent=ok?'SUCCESS':'FAILED';el('resultTitle').style.color=ok?'#a9f5bd':'#ff8d85';el('resultText').textContent=ok?'모든 목표 자세를 완료했습니다.':'제한시간이 종료되었습니다.';el('resultModal').classList.add('visible');}
-function checkGoal(){if(finished||!currentMission)return;let g=missionConfig[currentMission].goals[stage];let errors=g.map((v,i)=>Math.abs(v-angles[i]));if(errors.every(e=>e<=12)){stage++;if(stage>=missionConfig[currentMission].goals.length){endMission(true);}else{updateObjective();el('status').textContent='단계 완료! 다음 목표 자세로 이동하세요.';}}else{el('status').textContent='목표각 오차 확인: 최대 '+Math.max(...errors).toFixed(0)+'° / 허용 12°';}}
-function toggleGrip(){grip=!grip;el('gripBtn').textContent=grip?'집게 열기 (Space)':'집게 닫기 (Space)';}
-el('startBtn').onclick=()=>show('select');el('helpBtn').onclick=()=>el('helpModal').classList.add('visible');el('closeHelp').onclick=()=>el('helpModal').classList.remove('visible');
-el('backIntro').onclick=()=>show('intro');document.querySelectorAll('[data-mission]').forEach(e=>e.onclick=()=>startMission(e.dataset.mission));
-el('resetBtn').onclick=resetGame;el('retryBtn').onclick=resetGame;el('checkBtn').onclick=checkGoal;el('gripBtn').onclick=toggleGrip;
-el('missionBack').onclick=()=>{closeResult();show('select');currentMission=null;};el('selectBtn').onclick=el('missionBack').onclick;
-el('jsonBtn').onclick=async()=>{let json=JSON.stringify({source:'MECHA LAB SIMULATION ONLY',motor_ids:[1,2,3,4,5,6],joint_degrees:angles},null,2);try{await navigator.clipboard.writeText(json);el('status').textContent='각도 JSON을 복사했습니다.';}catch(e){el('status').textContent='복사 권한이 제한됩니다. '+json.replace(/\s+/g,' ');}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(el('helpModal').classList.contains('visible')){el('helpModal').classList.remove('visible');return;}if(el('game').classList.contains('active'))el('missionBack').click();}if(!el('game').classList.contains('active')||e.target.tagName==='INPUT')return;
- if(['1','2','3','4'].includes(e.key)){setCameraMode({1:'top',2:'left',3:'right',4:'bottom'}[e.key]);return;}
- if(e.key==='0'){setCameraMode('free');return;}
- if(e.key==='r'||e.key==='R')resetGame();if(e.code==='Space'){e.preventDefault();toggleGrip();}});
-canvas.addEventListener('pointerdown',e=>{if(cameraMode!=='free')return;mouseDown=true;lastX=e.clientX;lastY=e.clientY;canvas.classList.add('dragging');canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!mouseDown||cameraMode!=='free')return;cameraAz+=(e.clientX-lastX)*.0025;cameraEl=Math.max(-1.05,Math.min(1.05,cameraEl+(e.clientY-lastY)*.0025));lastX=e.clientX;lastY=e.clientY;});
-function stopDrag(){mouseDown=false;canvas.classList.remove('dragging');}canvas.addEventListener('pointerup',stopDrag);canvas.addEventListener('pointercancel',stopDrag);
-canvas.addEventListener('wheel',e=>{e.preventDefault();cameraZoom=Math.max(.55,Math.min(1.55,cameraZoom*(e.deltaY>0?.96:1.04)));},{passive:false});
-// Minimal self-contained 3D renderer: no CDN and no external files.
-const V=(x,y,z)=>[x,y,z],add=(a,b)=>a.map((v,i)=>v+b[i]),scale=(a,s)=>a.map(v=>v*s),mul=(A,B)=>A.map(row=>B[0].map((_,j)=>row.reduce((sum,v,k)=>sum+v*B[k][j],0)));
+function sync(){controls.forEach((c,i)=>{c.input.value=angles[i];c.out.textContent=Math.round(angles[i])+'°';});}
+function showGame(){el('intro').classList.remove('active');el('game').classList.add('active');setCameraMode('free');}
+function showIntro(){el('game').classList.remove('active');el('intro').classList.add('active');}
+function reset(){angles=[...neutral];grip=false;rockHeld=false;sync();el('gripBtn').textContent='집게 닫기 (Space)';el('status').textContent='관절 초기 자세 복원';}
+function startRock(){rockMode=true;rockCollected=false;rockHeld=false;rockPos=[1.3,.30,-1.0];rockStartTime=performance.now();el('rockStart').classList.add('active');el('rockStart').textContent='↻ 암석 다시 배치';el('missionState').textContent='MARS SAMPLE';el('clock').style.display='block';el('status').textContent='3D 암석이 생성됐습니다. 집게를 가까이 이동하세요.';}
+function d3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);}
+function toggleGrip(){
+ if(grip){grip=false;rockHeld=false;el('status').textContent='집게를 열었습니다.';}
+ else{grip=true;
+  if(rockMode&&!rockCollected&&d3(getKinematics().tip,rockPos)<.55){rockHeld=true;el('status').textContent='암석을 집었습니다.';}
+  else el('status').textContent='집게를 닫았습니다.';
+ }
+ el('gripBtn').textContent=grip?'집게 열기 (Space)':'집게 닫기 (Space)';
+}
+el('startBtn').onclick=showGame;
+el('helpBtn').onclick=()=>el('helpModal').classList.add('visible');
+el('closeHelp').onclick=()=>el('helpModal').classList.remove('visible');
+el('homeBtn').onclick=showIntro;
+el('rockStart').onclick=startRock;
+el('gripBtn').onclick=toggleGrip;
+el('resetBtn').onclick=reset;
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){if(el('helpModal').classList.contains('visible'))el('helpModal').classList.remove('visible');else if(el('game').classList.contains('active'))showIntro();return;}
+ if(!el('game').classList.contains('active')||e.target.tagName==='INPUT')return;
+ if('01234'.includes(e.key)&&e.key.length===1){setCameraMode(['free','top','left','right','bottom'][Number(e.key)]);return;}
+ if(e.key==='r'||e.key==='R')reset();
+ if(e.code==='Space'){e.preventDefault();toggleGrip();}
+});
+// 3D kinematics (visual approximation only; motor calibration not yet applied)
+const add=(a,b)=>a.map((v,i)=>v+b[i]);
+const mul=(A,B)=>A.map(row=>B[0].map((_,j)=>row.reduce((sum,v,k)=>sum+v*B[k][j],0)));
 const I=[[1,0,0],[0,1,0],[0,0,1]];
 const mv=(M,v)=>M.map(row=>row.reduce((s,a,i)=>s+a*v[i],0));
 function rot(axis,t){let c=Math.cos(t),s=Math.sin(t);if(axis==='x')return [[1,0,0],[0,c,-s],[0,s,c]];if(axis==='y')return [[c,0,s],[0,1,0],[-s,0,c]];return [[c,-s,0],[s,c,0],[0,0,1]];}
-function getKinematics(){let p=[0,.25,0],R=I,objs=[],joints=[];const axes=['y','z','z','z','x','y'],lengths=[.23,1.35,1.12,.57,.28,.22];
- for(let i=0;i<6;i++){R=mul(R,rot(axes[i],angles[i]*RAD));joints.push([...p]);let next=add(p,mv(R,[0,lengths[i],0]));objs.push({a:p,b:next,width:i===0?.28:.17,color:i%2?'#95aebb':'#ccdde2'});p=next;}
- return {objs,joints,tip:p,R};}
+const axes=['y','z','z','z','x','y'],lengths=[.23,1.35,1.12,.57,.28,.22];
+function getKinematics(a=angles){let p=[0,.25,0],R=I,joints=[];
+ for(let i=0;i<6;i++){R=mul(R,rot(axes[i],a[i]*RAD));joints.push([...p]);p=add(p,mv(R,[0,lengths[i],0]));}
+ return {joints,tip:p,R};}
 function project(p,w,h){let ca=Math.cos(cameraAz),sa=Math.sin(cameraAz),ce=Math.cos(cameraEl),se=Math.sin(cameraEl);
- let x=p[0]*ca-p[2]*sa, z=p[0]*sa+p[2]*ca, y=p[1]*ce-z*se, depth=p[1]*se+z*ce;
- // Frame the arm around a fixed point halfway up its structure, not the floor.
- let sc=Math.min(w/6.8,h/4.8)*cameraZoom;return [w*.5+x*sc,h*.54-(y-1.65*ce)*sc,depth];}
-function poly(points,fill,stroke='#263c52'){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.4;ctx.stroke();}
-function cube(p,R,s,color,w,h,depth,faces){let [sx,sy,sz]=s,verts=[];for(let x of [-1,1])for(let y of [-1,1])for(let z of [-1,1])verts.push(project(add(p,mv(R,[x*sx/2,y*sy/2,z*sz/2])),w,h));let ids=[[0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],[0,2,6,4],[1,5,7,3]];for(let ix of ids){faces.push({z:ix.reduce((v,i)=>v+verts[i][2],0)/4,pts:ix.map(i=>verts[i]),color});}}
-function draw3D(){if(!el('game').classList.contains('active'))return;let rect=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(!w||!h)return;if(canvas.width!==Math.floor(w*dpr)||canvas.height!==Math.floor(h*dpr)){canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);
- const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#122d48');grad.addColorStop(1,'#070e21');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
- ctx.strokeStyle='#294660';ctx.lineWidth=1;for(let x=-4;x<=4;x++){let a=project([x,0,-4],w,h),b=project([x,0,4],w,h);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}for(let z=-4;z<=4;z++){let a=project([-4,0,z],w,h),b=project([4,0,z],w,h);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
- const kin=getKinematics(),faces=[];cube([0,.09,0],I,[.68,.18,.68],'#405c72',w,h,0,faces);let p=[0,.25,0],R=I;let axes=['y','z','z','z','x','y'],ls=[.23,1.35,1.12,.57,.28,.22];
- for(let i=0;i<6;i++){R=mul(R,rot(axes[i],angles[i]*RAD));cube(p,R,[.3,.3,.3],i%2?'#d78266':'#e6a47a',w,h,0,faces);let center=add(p,mv(R,[0,ls[i]/2,0]));cube(center,R,[i===0?.28:.19,ls[i],.23],i%2?'#6489a0':'#9fb7c1',w,h,0,faces);p=add(p,mv(R,[0,ls[i],0]));}
- cube(p,R,[.34,.12,.34],'#f3c47b',w,h,0,faces);for(let s of [-1,1]){let offset=mv(R,[s*(grip?.11:.21),.13,0]);cube(add(p,offset),R,[.09,.32,.12],'#ffe0a4',w,h,0,faces);}
+ const x=p[0]*ca-p[2]*sa,z=p[0]*sa+p[2]*ca,y=p[1]*ce-z*se,depth=p[1]*se+z*ce;
+ const sc=Math.min(w/6.8,h/4.8)*cameraZoom;
+ return [w*.5+x*sc,h*.54-(y-1.65*ce)*sc,depth];}
+function poly(points,fill,stroke='#263c52'){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke();}
+function cube(p,R,s,color,w,h,faces){let [sx,sy,sz]=s,verts=[];for(let x of [-1,1])for(let y of [-1,1])for(let z of [-1,1])verts.push(project(add(p,mv(R,[x*sx/2,y*sy/2,z*sz/2])),w,h));const ids=[[0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],[0,2,6,4],[1,5,7,3]];for(let ix of ids){faces.push({z:ix.reduce((v,i)=>v+verts[i][2],0)/4,pts:ix.map(i=>verts[i]),color});}}
+function rockMesh(p,w,h,faces){const verts=[[0,1,0],[.9,.27,.33],[.55,-.48,.7],[-.4,-.62,.75],[-.98,.02,.32],[-.7,.45,-.65],[.40,-.32,-.8],[0,-1,0]].map(([x,y,z])=>project([p[0]+x*.29,p[1]+y*.25,p[2]+z*.29],w,h));const tris=[[0,1,2],[0,2,3],[0,3,4],[0,4,5],[0,5,6],[0,6,1],[7,2,1],[7,3,2],[7,4,3],[7,5,4],[7,6,5],[7,1,6]];const colors=['#ad6047','#be7855','#96523e','#8c4736','#cb815d','#9a5a42','#b86f50','#98503b','#c3865b','#a35a44','#7d4034','#ad694b'];tris.forEach((ids,i)=>faces.push({z:ids.reduce((v,k)=>v+verts[k][2],0)/3,pts:ids.map(k=>verts[k]),color:colors[i]}));}
+function draw(){if(!el('game').classList.contains('active'))return;
+ const rect=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(!w||!h)return;
+ if(canvas.width!==Math.floor(w*dpr)||canvas.height!==Math.floor(h*dpr)){canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);
+ const bg=ctx.createLinearGradient(0,0,0,h);bg.addColorStop(0,rockMode?'#28374a':'#122d48');bg.addColorStop(1,rockMode?'#332a29':'#070e21');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+ ctx.strokeStyle=rockMode?'#614d45':'#294660';ctx.lineWidth=1;
+ for(let x=-4;x<=4;x++){let a=project([x,0,-4],w,h),b=project([x,0,4],w,h);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+ for(let z=-4;z<=4;z++){let a=project([-4,0,z],w,h),b=project([4,0,z],w,h);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+ let kin=getKinematics(),faces=[];cube([0,.09,0],I,[.68,.18,.68],'#405c72',w,h,faces);let p=[0,.25,0],R=I;
+ for(let i=0;i<6;i++){R=mul(R,rot(axes[i],angles[i]*RAD));cube(p,R,[.3,.3,.3],i%2?'#d78266':'#e6a47a',w,h,faces);let center=add(p,mv(R,[0,lengths[i]/2,0]));cube(center,R,[i===0?.28:.19,lengths[i],.23],i%2?'#6489a0':'#9fb7c1',w,h,faces);p=add(p,mv(R,[0,lengths[i],0]));}
+ cube(p,R,[.34,.12,.34],'#f3c47b',w,h,faces);for(let s of [-1,1]){let offset=mv(R,[s*(grip?.11:.21),.13,0]);cube(add(p,offset),R,[.09,.32,.12],'#ffe0a4',w,h,faces);}
+ if(rockMode){if(rockHeld)rockPos=add(p,mv(R,[0,.35,0]));rockMesh(rockPos,w,h,faces);}
  faces.sort((a,b)=>b.z-a.z);faces.forEach(f=>poly(f.pts,f.color));
- for(let i=0;i<kin.joints.length;i++){let q=project(kin.joints[i],w,h);ctx.beginPath();ctx.arc(q[0],q[1],6,0,Math.PI*2);ctx.fillStyle='#f39c6a';ctx.fill();ctx.font='bold 12px Consolas';ctx.fillStyle='#ffffff';ctx.fillText('J'+(i+1),q[0]+9,q[1]-7);}
- let t=project(p,w,h);ctx.fillStyle='#9af5cd';ctx.beginPath();ctx.arc(t[0],t[1],4,0,Math.PI*2);ctx.fill();}
-function loop(now){if(el('game').classList.contains('active')){if(!finished){let remaining=Math.max(0,Math.ceil(duration-(now-startTime)/1000));el('clock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');el('clock').classList.toggle('red',remaining<=30);if(remaining===0)endMission(false);}draw3D();}frameId=requestAnimationFrame(loop);}
-setCameraMode('free');
-requestAnimationFrame(loop);
+ // Visible angle badges are also the hit targets for direct joint dragging.
+ lastModel=kin;
+ kin.joints.forEach((jp,i)=>{let q=project(jp,w,h),label='J'+(i+1)+'  '+Math.round(angles[i])+'°';ctx.beginPath();ctx.arc(q[0],q[1],9,0,Math.PI*2);ctx.fillStyle=jointDrag===i?'#ffe28c':'#ef9568';ctx.fill();ctx.strokeStyle='#fff1ce';ctx.lineWidth=2;ctx.stroke();if(jointDrag===i){ctx.beginPath();ctx.arc(q[0],q[1],22,-Math.PI/2,-Math.PI/2+angles[i]*RAD,angles[i]<0);ctx.strokeStyle='#90efff';ctx.lineWidth=4;ctx.stroke();}
+  ctx.font='bold 12px Consolas, monospace';let tw=ctx.measureText(label).width;let ox=q[0]+12,oy=q[1]-27;ctx.fillStyle='#132338ec';ctx.fillRect(ox-3,oy-12,tw+11,18);ctx.fillStyle='#ffffff';ctx.fillText(label,ox+1,oy+1);});
+ if(rockMode){let rp=project(rockPos,w,h);ctx.fillStyle='#ffd9b7';ctx.font='bold 13px Consolas';ctx.fillText(rockHeld?'SAMPLE HELD':'MARS ROCK',rp[0]+12,rp[1]-22);}
+}
+function nearestJoint(x,y){if(!lastModel)return -1;let w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height,idx=-1,best=28;
+ lastModel.joints.forEach((p,i)=>{let q=project(p,w,h),d=Math.hypot(x-q[0],y-q[1]);if(d<best){best=d;idx=i;}});return idx;}
+canvas.addEventListener('pointerdown',e=>{
+ if(!el('game').classList.contains('active'))return;
+ const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+ jointDrag=nearestJoint(x,y);cameraDrag=jointDrag<0&&cameraMode==='free';lastX=x;lastY=y;
+ if(jointDrag>=0)el('dragHelp').textContent='J'+(jointDrag+1)+' 조작 중 · '+Math.round(angles[jointDrag])+'°';
+ if(cameraDrag||jointDrag>=0){canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging');}
+});
+canvas.addEventListener('pointermove',e=>{
+ const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,dx=x-lastX,dy=y-lastY;
+ if(jointDrag>=0){const i=jointDrag; // screen-space angle change projected from the joint's real local rotation axis
+   const aa=[...angles];aa[i]=Math.min(maxs[i],angles[i]+2);
+   const k0=getKinematics(),k1=getKinematics(aa);
+   const pivot=k0.joints[i],ref=add(pivot,mv(k0.R,[0,.38,0]));
+   // Prefer projected position movement of a point downstream of the joint.
+   const endpoint0=k0.tip,endpoint1=k1.tip;
+   const p0=project(endpoint0,r.width,r.height),p1=project(endpoint1,r.width,r.height);
+   let vx=p1[0]-p0[0],vy=p1[1]-p0[1],v2=vx*vx+vy*vy;
+   let inc=v2>1?(dx*vx+dy*vy)/v2*2:(dx-dy)*.30;
+   inc=Math.max(-5,Math.min(5,inc));angles[i]=Math.max(mins[i],Math.min(maxs[i],angles[i]+inc));sync();
+   el('dragHelp').textContent='J'+(i+1)+' 조작 중 · '+Math.round(angles[i])+'°';
+ }else if(cameraDrag){cameraAz+=dx*.0025;cameraEl=Math.max(-1.05,Math.min(1.05,cameraEl+dy*.0025));}
+ lastX=x;lastY=y;
+});
+function stopDrag(){jointDrag=-1;cameraDrag=false;canvas.classList.remove('dragging');el('dragHelp').textContent='관절의 주황색 원을 끌어 회전';}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>canvas.addEventListener(ev,stopDrag));
+canvas.addEventListener('wheel',e=>{e.preventDefault();cameraZoom=Math.max(.55,Math.min(1.55,cameraZoom*(e.deltaY>0?.96:1.04)));},{passive:false});
+function loop(now){if(el('game').classList.contains('active')){
+ if(rockMode){let sec=Math.max(0,90-Math.floor((now-rockStartTime)/1000));el('clock').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');if(sec===0&&!rockCollected){el('status').textContent='시간 종료 · 암석 다시 배치로 재도전할 수 있습니다.';}}
+ draw();}requestAnimationFrame(loop);}
+setCameraMode('free');requestAnimationFrame(loop);
 </script></body></html>"""
-
 components.html(GAME_HTML, height=920, scrolling=False)
-# END OF COMPLETE MECHA LAB 2.0 SINGLE-FILE APP
+# END OF MECHA LAB 2.0 COMPLETE MAIN.PY
