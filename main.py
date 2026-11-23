@@ -1,35 +1,18 @@
-# MECHA LAB 2.0 | SINGLE FILE | 6 JOINT 3D | 2026-11-23
-# Simulation only: no communication with real ROBOTIS hardware.
+# MECHA LAB 2.0 | STANDALONE STREAMLIT | 2026-11-23
+# Single-file simulation. No motor commands are sent.
 import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="MECHA LAB 2.0", page_icon="🦾", layout="wide", initial_sidebar_state="collapsed")
+st.markdown("""<style>
+header[data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stSidebarNav"] {display:none !important;}
+.block-container {max-width:100% !important; padding:0 !important;}
+.stApp {background:#080d19;}
+[data-testid="stAppViewContainer"] {padding:0 !important;}
+iframe {display:block;}
+</style>""", unsafe_allow_html=True)
 
-STYLE = '''<style>
-[data-testid="stSidebar"], [data-testid="stSidebarNav"], [data-testid="stHeader"] {display:none!important;}
-[data-testid="stAppViewContainer"] {background: radial-gradient(ellipse at 75% 20%, #142e51 0%, #080e1f 55%, #060b16 100%);}
-.block-container {max-width: 1400px !important; padding: 1.5rem 2.2rem 1rem !important;}
-html, body {background:#080e1f;}
-h1,h2,h3,p,label,div {font-family: 'Malgun Gothic',sans-serif;}
-.stButton>button {background:#152941!important;color:#e8f6ff!important;border:1px solid #567b9a!important;border-radius:8px!important;min-height:52px;width:100%;font-weight:700!important;}
-.stButton>button:hover {border-color:#ffd08a!important;color:#ffd08a!important;background:#1e3854!important;}
-[data-testid="stMarkdownContainer"] p {color:#c8daeb;}
-iframe {display:block;border:1px solid #3b6683;border-radius:14px;background:#091523;}
-</style>'''
-st.markdown(STYLE, unsafe_allow_html=True)
-
-if "mecha_screen" not in st.session_state:
-    st.session_state.mecha_screen = "intro"
-if "mecha_mission" not in st.session_state:
-    st.session_state.mecha_mission = "rock"
-
-MISSION_INFO = {
-    "rock": ("01", "화성 암석 채취", "90초 · 목표 관절 자세 달성"),
-    "battery": ("02", "배터리 분리", "120초 · 목표 관절 자세 달성"),
-    "satellite": ("03", "인공위성 수리", "240초 · 3단계 관절 자세 달성"),
-}
-
-GAME_HTML = r'''<!DOCTYPE html>
+GAME_HTML = r"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{--bg:#090f20;--panel:#101c34;--line:#46617e;--cyan:#89e5ed;--orange:#fbb16b;--white:#edf5fa}
@@ -64,10 +47,10 @@ h1{font-size:clamp(58px,10vw,135px);margin:15px 0 0;line-height:1;letter-spacing
 @media(max-width:760px){.workspace{grid-template-columns:1fr;grid-template-rows:minmax(310px,1fr) 280px}.panel{border-left:0;border-top:1px solid #426079}.choices{grid-template-columns:1fr;gap:8px}.choice{min-height:100px}.choice p{display:none}.choice h3{margin:8px 0}.screen{min-height:580px}.topbar{padding:8px}.foot{padding:6px}.clock{font-size:22px}}
 </style></head>
 <body>
-<section id="intro" class="screen"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB</h1><div class="subtitle">VIRTUAL ROBOT ARM CONTROL SYSTEM</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div><p class="tips">6-MOTOR SIMULATION · BIOLOID PREMIUM</p></div></section>
+<section id="intro" class="screen active"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB</h1><div class="subtitle">VIRTUAL ROBOT ARM CONTROL SYSTEM</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div><p class="tips">6-MOTOR SIMULATION · BIOLOID PREMIUM EXPERIMENT</p></div></section>
 <section id="select" class="screen"><div class="stars"></div><div style="z-index:2;text-align:center"><div class="eyebrow">MISSION SELECT</div><h2>SELECT OPERATION</h2><div class="choices"><div class="choice" data-mission="rock"><div class="num">01 / 01:30</div><h3>화성 암석 채취</h3><p>6개 관절을 조작해 암석 샘플 지점으로 말단을 이동시켜 보세요.</p></div><div class="choice" data-mission="battery"><div class="num">02 / 02:00</div><h3>배터리 분리</h3><p>목표 자세로 이동해 궤도 장치의 배터리를 분리하세요.</p></div><div class="choice" data-mission="satellite"><div class="num">03 / 04:00</div><h3>인공위성 수리</h3><p>여러 단계의 목표 자세를 달성해 정비 작업을 완료하세요.</p></div></div><button id="backIntro">← BACK</button></div></section>
-<section id="game" class="screen active"><div class="topbar"><div><div class="brand">MECHA LAB / 3D MISSION CONTROL</div><h2 id="missionTitle">화성 암석 채취</h2></div><div><div class="brand">TIME REMAINING</div><div class="clock" id="clock">01:30</div></div></div>
-<div class="workspace"><div class="viewport"><canvas id="scene" aria-label="6관절 3D 로봇팔"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br>드래그: 시점 회전 · 휠: 확대/축소<br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
+<section id="game" class="screen"><div class="topbar"><div><div class="brand">MECHA LAB / 3D MISSION CONTROL</div><h2 id="missionTitle">화성 암석 채취</h2></div><div><div class="brand">TIME REMAINING</div><div class="clock" id="clock">01:30</div></div></div>
+<div class="workspace"><div class="viewport"><canvas id="scene"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br>드래그: 시점 회전 · 휠: 확대/축소<br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
 <div class="modal" id="resultModal"><div class="modal-inner"><div class="eyebrow">MISSION REPORT</div><h2 id="resultTitle">SUCCESS</h2><p id="resultText"></p><button id="retryBtn" class="primary">다시 도전</button><button id="selectBtn">미션 선택</button></div></div></section>
 <div class="modal" id="helpModal"><div class="modal-inner"><h2>HOW TO PLAY</h2><p>미션을 선택한 뒤 J1~J6의 슬라이더로 3D 로봇팔을 움직여 주세요. 화면을 드래그하면 로봇팔을 다른 방향에서 관찰할 수 있습니다. 미션별 목표 관절각에 접근해 판정 버튼을 누르면 됩니다.</p><p class="tips">R = 재시작 / Esc = 미션 선택 / Space = 집게 개폐<br>실물 로봇팔과의 USB 제어는 아직 연결하지 않은 시뮬레이션 버전입니다.</p><button id="closeHelp">확인</button></div></div>
 <script>
@@ -80,20 +63,6 @@ const missionConfig = {
   battery:{title:'배터리 분리',time:120,goals:[[0,-15,40,20,0,0]],text:'배터리 분리 자세에 접근하세요. 모든 관절을 목표각 ±12° 이내로 맞춰주세요.'},
   satellite:{title:'인공위성 수리',time:240,goals:[[15,-25,50,10,25,0],[-15,-10,30,0,-20,35],[0,-35,55,5,0,-20]],text:'위성 정비 3단계입니다. 목표 자세를 차례로 달성하세요.'}
 };
-const neutral=[0,-20,35,0,0,0];
-const mins=[-145,-95,-120,-110,-145,-145];
-const maxs=[145,95,120,110,145,145];
-let angles=[...neutral], grip=false, currentMission=null, stage=0, duration=90, startTime=0, finished=false, frameId=0;
-let cameraAz=.75,cameraEl=.36,cameraZoom=.72,mouseDown=false,lastX=0,lastY=0;
-const RAD=Math.PI/180;
-const controls=[];
-for(let i=0;i<6;i++){
- const div=document.createElement('div');div.className='joint';
- const label=document.createElement('label');const name=document.createElement('span');name.textContent='J'+(i+1)+' / ID '+String(i+1).padStart(3,'0');
- const out=document.createElement('output');out.textContent=angles[i]+'°';label.append(name,out);
- const input=document.createElement('input');input.type='range';input.min=mins[i];input.max=maxs[i];input.step='1';input.value=angles[i];input.setAttribute('aria-label','관절 '+(i+1)+' 각도');
- input.addEventListener('input',()=>{angles[i]=Number(input.value);out.textContent=angles[i]+'°';});
- div.append(label,input);el('jointControls').append(div);controls.push({input,out});};
 const neutral=[0,-20,35,0,0,0];
 const mins=[-145,-95,-120,-110,-145,-145];
 const maxs=[145,95,120,110,145,145];
