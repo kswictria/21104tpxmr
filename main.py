@@ -57,7 +57,7 @@ h1{font-size:clamp(58px,10vw,135px);margin:15px 0 0;line-height:1;letter-spacing
 <section id="intro" class="screen active"><div class="stars"></div><div class="orb"></div><div class="scan"></div><div class="intro-content"><div class="eyebrow">ROBOTICS / SPACE OPERATIONS / 6 AXIS</div><h1>MECHA LAB</h1><div class="subtitle">VIRTUAL ROBOT ARM CONTROL SYSTEM</div><div class="intro-btns"><button class="primary" id="startBtn">▶ START GAME</button><button id="helpBtn">ⓘ HOW TO PLAY</button></div><p class="tips">6-MOTOR SIMULATION · BIOLOID PREMIUM EXPERIMENT</p></div></section>
 <section id="select" class="screen"><div class="stars"></div><div style="z-index:2;text-align:center"><div class="eyebrow">MISSION SELECT</div><h2>SELECT OPERATION</h2><div class="choices"><div class="choice" data-mission="rock"><div class="num">01 / 01:30</div><h3>화성 암석 채취</h3><p>6개 관절을 조작해 암석 샘플 지점으로 말단을 이동시켜 보세요.</p></div><div class="choice" data-mission="battery"><div class="num">02 / 02:00</div><h3>배터리 분리</h3><p>목표 자세로 이동해 궤도 장치의 배터리를 분리하세요.</p></div><div class="choice" data-mission="satellite"><div class="num">03 / 04:00</div><h3>인공위성 수리</h3><p>여러 단계의 목표 자세를 달성해 정비 작업을 완료하세요.</p></div></div><button id="backIntro">← BACK</button></div></section>
 <section id="game" class="screen"><div class="topbar"><div><div class="brand">MECHA LAB / 3D MISSION CONTROL</div><h2 id="missionTitle">화성 암석 채취</h2></div><div><div class="brand">TIME REMAINING</div><div class="clock" id="clock">01:30</div></div></div>
-<div class="workspace"><div class="viewport" id="viewPort"><canvas id="scene"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br><span id="cameraHelp">자유 시점: 드래그로 회전 · 휠로 확대/축소</span><br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div><div class="camera-controls" id="cameraControls" aria-label="카메라 시점 선택"><span class="camera-title">CAMERA</span><button type="button" data-view="free" class="selected">◎ 자유 시점</button><button type="button" data-view="top">1 위</button><button type="button" data-view="left">2 왼쪽</button><button type="button" data-view="right">3 오른쪽</button><button type="button" data-view="bottom">4 아래</button><span class="view-status" id="viewStatus">드래그 회전 가능</span></div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
+<div class="workspace"><div class="viewport" id="viewPort"><canvas id="scene"></canvas><div class="hud"><strong>6 AXIS / DIGITAL SIMULATION</strong><br><span id="cameraHelp">자유 시점: 드래그로 회전 · 휠로 확대/축소</span><br>J1~J6 슬라이더: 관절 회전<br>실제 모터로 명령을 전송하지 않습니다.</div><div class="camera-controls" id="cameraControls" aria-label="카메라 시점 선택"><span class="camera-title">CAMERA</span><button type="button" data-view="free" class="selected">◎ 자유 시점</button><button type="button" data-view="top">1 위·사선</button><button type="button" data-view="left">2 왼쪽·사선</button><button type="button" data-view="right">3 오른쪽·사선</button><button type="button" data-view="bottom">4 아래·사선</button><span class="view-status" id="viewStatus">드래그 회전 가능</span></div></div><div class="panel"><h3>JOINT CONTROL / MOTOR 01—06</h3><div id="jointControls"></div><div class="missionText" id="objective"></div><div class="actions"><button id="gripBtn">집게 열기/닫기</button><button id="checkBtn" class="primary">목표 자세 판정</button><button id="resetBtn">↻ 다시 시작 (R)</button><button id="jsonBtn">각도 JSON 복사</button></div><p class="tips">※ 실제 로봇팔의 정확한 링크 길이·회전축·영점이 확인되기 전의 3D 근사 모델입니다. 슬라이더 각도는 실제 모터 위치값이 아닙니다.</p></div></div><div class="foot"><button id="missionBack">← MISSION SELECT (Esc)</button><span id="status">관절 슬라이더로 로봇팔을 움직이세요.</span></div>
 <div class="modal" id="resultModal"><div class="modal-inner"><div class="eyebrow">MISSION REPORT</div><h2 id="resultTitle">SUCCESS</h2><p id="resultText"></p><button id="retryBtn" class="primary">다시 도전</button><button id="selectBtn">미션 선택</button></div></div></section>
 <div class="modal" id="helpModal"><div class="modal-inner"><h2>HOW TO PLAY</h2><p>미션을 선택한 뒤 J1~J6의 슬라이더로 3D 로봇팔을 움직여 주세요. 자유 시점에서는 화면 드래그로 회전하고 휠로 확대/축소할 수 있습니다. 1=위, 2=왼쪽, 3=오른쪽, 4=아래 시점이며, 방향이 고정됩니다. 다시 자유 시점 버튼을 누르면 직접 회전할 수 있습니다. 미션별 목표 관절각에 접근해 판정 버튼을 누르면 됩니다.</p><p class="tips">R = 재시작 / Esc = 미션 선택 / Space = 집게 개폐<br>실물 로봇팔과의 USB 제어는 아직 연결하지 않은 시뮬레이션 버전입니다.</p><button id="closeHelp">확인</button></div></div>
 <script>
@@ -74,16 +74,18 @@ const neutral=[0,-20,35,0,0,0];
 const mins=[-145,-95,-120,-110,-145,-145];
 const maxs=[145,95,120,110,145,145];
 let angles=[...neutral], grip=false, currentMission=null, stage=0, duration=90, startTime=0, finished=false, frameId=0;
-let cameraAz=.75,cameraEl=.36,cameraZoom=.72,mouseDown=false,lastX=0,lastY=0;
+let cameraAz=.75,cameraEl=.36,cameraZoom=.82,mouseDown=false,lastX=0,lastY=0;
 // 'free' rotates with drag; the four numbered views lock camera direction.
 let cameraMode='free';
+// Diagonal viewpoints preserve depth cues and keep joint motion readable.
+// No view is directly overhead, directly underneath, or perfectly side-on.
 const cameraViews={
-  top:{az:0,el:Math.PI/2},
-  left:{az:-Math.PI/2,el:0},
-  right:{az:Math.PI/2,el:0},
-  bottom:{az:0,el:-Math.PI/2}
+  top:{az:.75,el:.72},
+  left:{az:-.35,el:.28},
+  right:{az:1.35,el:.28},
+  bottom:{az:.75,el:-.38}
 };
-const cameraLabels={free:'자유 시점',top:'위',left:'왼쪽',right:'오른쪽',bottom:'아래'};
+const cameraLabels={free:'자유 시점',top:'위쪽 사선',left:'왼쪽 사선',right:'오른쪽 사선',bottom:'아래쪽 사선'};
 function setCameraMode(mode){
   if(mode!=='free' && !cameraViews[mode])return;
   cameraMode=mode;
@@ -134,9 +136,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(el('helpModal').
  if(e.key==='0'){setCameraMode('free');return;}
  if(e.key==='r'||e.key==='R')resetGame();if(e.code==='Space'){e.preventDefault();toggleGrip();}});
 canvas.addEventListener('pointerdown',e=>{if(cameraMode!=='free')return;mouseDown=true;lastX=e.clientX;lastY=e.clientY;canvas.classList.add('dragging');canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!mouseDown||cameraMode!=='free')return;cameraAz+=(e.clientX-lastX)*.004;cameraEl=Math.max(-1.45,Math.min(1.45,cameraEl+(e.clientY-lastY)*.004));lastX=e.clientX;lastY=e.clientY;});
+canvas.addEventListener('pointermove',e=>{if(!mouseDown||cameraMode!=='free')return;cameraAz+=(e.clientX-lastX)*.0025;cameraEl=Math.max(-1.05,Math.min(1.05,cameraEl+(e.clientY-lastY)*.0025));lastX=e.clientX;lastY=e.clientY;});
 function stopDrag(){mouseDown=false;canvas.classList.remove('dragging');}canvas.addEventListener('pointerup',stopDrag);canvas.addEventListener('pointercancel',stopDrag);
-canvas.addEventListener('wheel',e=>{e.preventDefault();cameraZoom=Math.max(.5,Math.min(2.1,cameraZoom*(e.deltaY>0?.91:1.09)));},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();cameraZoom=Math.max(.55,Math.min(1.55,cameraZoom*(e.deltaY>0?.96:1.04)));},{passive:false});
 // Minimal self-contained 3D renderer: no CDN and no external files.
 const V=(x,y,z)=>[x,y,z],add=(a,b)=>a.map((v,i)=>v+b[i]),scale=(a,s)=>a.map(v=>v*s),mul=(A,B)=>A.map(row=>B[0].map((_,j)=>row.reduce((sum,v,k)=>sum+v*B[k][j],0)));
 const I=[[1,0,0],[0,1,0],[0,0,1]];
@@ -147,7 +149,8 @@ function getKinematics(){let p=[0,.25,0],R=I,objs=[],joints=[];const axes=['y','
  return {objs,joints,tip:p,R};}
 function project(p,w,h){let ca=Math.cos(cameraAz),sa=Math.sin(cameraAz),ce=Math.cos(cameraEl),se=Math.sin(cameraEl);
  let x=p[0]*ca-p[2]*sa, z=p[0]*sa+p[2]*ca, y=p[1]*ce-z*se, depth=p[1]*se+z*ce;
- let sc=Math.min(w/6.8,h/4.8)*cameraZoom;return [w*.48+x*sc,h*.72-y*sc,depth];}
+ // Frame the arm around a fixed point halfway up its structure, not the floor.
+ let sc=Math.min(w/6.8,h/4.8)*cameraZoom;return [w*.5+x*sc,h*.54-(y-1.65*ce)*sc,depth];}
 function poly(points,fill,stroke='#263c52'){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.4;ctx.stroke();}
 function cube(p,R,s,color,w,h,depth,faces){let [sx,sy,sz]=s,verts=[];for(let x of [-1,1])for(let y of [-1,1])for(let z of [-1,1])verts.push(project(add(p,mv(R,[x*sx/2,y*sy/2,z*sz/2])),w,h));let ids=[[0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],[0,2,6,4],[1,5,7,3]];for(let ix of ids){faces.push({z:ix.reduce((v,i)=>v+verts[i][2],0)/4,pts:ix.map(i=>verts[i]),color});}}
 function draw3D(){if(!el('game').classList.contains('active'))return;let rect=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(!w||!h)return;if(canvas.width!==Math.floor(w*dpr)||canvas.height!==Math.floor(h*dpr)){canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);
