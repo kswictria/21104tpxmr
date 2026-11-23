@@ -1,3 +1,35 @@
+# MECHA LAB 2.0 | STANDALONE STREAMLIT | 2026-11-23
+# Single-file simulation. No motor commands are sent.
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="MECHA LAB 2.0", page_icon="🦾", layout="wide", initial_sidebar_state="collapsed")
+st.markdown("""<style>
+header[data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stSidebarNav"] {display:none !important;}
+.block-container {max-width:100% !important; padding:0 !important;}
+.stApp {background:#080d19;}
+[data-testid="stAppViewContainer"] {padding:0 !important;}
+iframe {display:block;}
+</style>""", unsafe_allow_html=True)
+
+GAME_HTML = r"""<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#090f20;--panel:#101c34;--line:#46617e;--cyan:#89e5ed;--orange:#fbb16b;--white:#edf5fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Consolas,'Malgun Gothic',sans-serif;overflow:hidden}
+button,input{font:inherit}button{border:1px solid #8ba3ba;background:#1e304c;color:#e9f7ff;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:700}
+button:hover{border-color:#ffd598;color:#ffd598}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan)}button.primary{background:#eaa269;color:#111c30;border-color:#ffdfab}
+.screen{height:100vh;min-height:600px;display:none;position:relative;overflow:hidden}.screen.active{display:flex}
+#intro{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 66% 42%,#253b76 0,#0a142b 42%,#080c16 80%)}
+.stars{position:absolute;inset:0;background-image:radial-gradient(2px 2px at 12% 20%,white 90%,transparent),radial-gradient(2px 2px at 76% 23%,#b2eaff 90%,transparent),radial-gradient(2px 2px at 40% 64%,white 90%,transparent),radial-gradient(1px 1px at 22% 81%,white 90%,transparent),radial-gradient(1px 1px at 83% 76%,white 90%,transparent);background-size:410px 360px;opacity:.65;pointer-events:none}
+.orb{position:absolute;width:38vmin;height:38vmin;right:7%;top:12%;border-radius:50%;background:radial-gradient(circle at 31% 27%,#80b7d7,#4158a4 48%,#1d2459 75%);box-shadow:0 0 70px #3866a966;opacity:.65;pointer-events:none}
+.intro-content{position:relative;z-index:2;padding:20px}.eyebrow{font-size:12px;letter-spacing:5px;color:var(--cyan);font-weight:700}
+h1{font-size:clamp(58px,10vw,135px);margin:15px 0 0;line-height:1;letter-spacing:7px;text-shadow:0 6px #192d48,0 0 28px #7bd5e966}
+.subtitle{color:#b1c8dd;letter-spacing:3px;font-size:clamp(12px,2vw,20px);margin:12px 0 30px}.intro-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.scan{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0px,transparent 5px,#00000018 6px);z-index:1}
+#select{flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 10%,#192f57,#0a1021 70%)}
+#select h2{font-size:34px;letter-spacing:4px}.choices{display:grid;grid-template-columns:repeat(3,minmax(0,250px));gap:18px;width:min(860px,93vw);margin:25px 0}
+.choice{background:#16263e;border:1px solid #557a92;text-align:left;border-radius:12px;min-height:200px;padding:23px;cursor:pointer;transition:transform .15s}
 .choice:hover{transform:translateY(-5px);border-color:var(--orange)}.choice .num{color:var(--orange);letter-spacing:3px}.choice h3{font-size:22px}.choice p{color:#c1d4df;font-size:13px;line-height:1.6}
 #game{flex-direction:column;background:#091322}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 22px;background:#12243a;border-bottom:1px solid #426079}
 .brand{color:var(--cyan);font-size:12px;letter-spacing:2px}.topbar h2{font-size:19px;margin:3px 0 0}.clock{font-size:30px;color:#ffca88;font-weight:800;font-variant-numeric:tabular-nums}.clock.red{color:#ff7474}
@@ -126,3 +158,11 @@ function draw3D(){if(!el('game').classList.contains('active'))return;let rect=ca
  cube(p,R,[.34,.12,.34],'#f3c47b',w,h,0,faces);for(let s of [-1,1]){let offset=mv(R,[s*(grip?.11:.21),.13,0]);cube(add(p,offset),R,[.09,.32,.12],'#ffe0a4',w,h,0,faces);}
  faces.sort((a,b)=>b.z-a.z);faces.forEach(f=>poly(f.pts,f.color));
  for(let i=0;i<kin.joints.length;i++){let q=project(kin.joints[i],w,h);ctx.beginPath();ctx.arc(q[0],q[1],6,0,Math.PI*2);ctx.fillStyle='#f39c6a';ctx.fill();ctx.font='bold 12px Consolas';ctx.fillStyle='#ffffff';ctx.fillText('J'+(i+1),q[0]+9,q[1]-7);}
+ let t=project(p,w,h);ctx.fillStyle='#9af5cd';ctx.beginPath();ctx.arc(t[0],t[1],4,0,Math.PI*2);ctx.fill();}
+function loop(now){if(el('game').classList.contains('active')){if(!finished){let remaining=Math.max(0,Math.ceil(duration-(now-startTime)/1000));el('clock').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');el('clock').classList.toggle('red',remaining<=30);if(remaining===0)endMission(false);}draw3D();}frameId=requestAnimationFrame(loop);}
+setCameraMode('free');
+requestAnimationFrame(loop);
+</script></body></html>"""
+
+components.html(GAME_HTML, height=920, scrolling=False)
+# END OF COMPLETE MECHA LAB 2.0 SINGLE-FILE APP
